@@ -1,58 +1,89 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import * as XLSX from "xlsx";
 import "./Jantri.css";
 
 const JantriMain = () => {
-  const [inputs, setInputs] = useState(Array(120).fill("")); // 120 blank inputs
-  const inputRefs = useRef([]); // Array of references to input elements
+  const [rows, setRows] = useState(12); // Number of rows
+  const [columns, setColumns] = useState(10); // Number of columns
+  const [inputs, setInputs] = useState(Array(120).fill("")); // Default 120 inputs
+  const inputRefs = useRef([]); // Array of input references
 
+  // Load saved data from localStorage on component mount
+  useEffect(() => {
+    const savedInputs = JSON.parse(localStorage.getItem("jantriInputs"));
+    if (savedInputs) setInputs(savedInputs);
+  }, []);
+
+  // Save inputs to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("jantriInputs", JSON.stringify(inputs));
+  }, [inputs]);
+
+  // Handle input value change
   const handleInputChange = (index, value) => {
-    const updatedInputs = [...inputs];
-    updatedInputs[index] = value; // Store the value as a string
-    setInputs(updatedInputs);
-  };
-
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // Prevent default "Enter" key behavior
-      const nextIndex = index + 1; // Calculate the next input index
-      if (nextIndex < inputRefs.current.length) {
-        inputRefs.current[nextIndex]?.focus(); // Focus the next input if available
-      }
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault();
-      if (index % 10 < 9) inputRefs.current[index + 1]?.focus();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      if (index % 10 > 0) inputRefs.current[index - 1]?.focus();
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (index + 10 < 120) inputRefs.current[index + 10]?.focus();
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (index - 10 >= 0) inputRefs.current[index - 10]?.focus();
+    if (!isNaN(value) || value === "") {
+      const updatedInputs = [...inputs];
+      updatedInputs[index] = value;
+      setInputs(updatedInputs);
     }
   };
 
-  // Generate label values
+  // Keyboard navigation for inputs
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const nextIndex = index + 1;
+      if (nextIndex < inputRefs.current.length) {
+        inputRefs.current[nextIndex]?.focus();
+      }
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      if (index % columns < columns - 1) inputRefs.current[index + 1]?.focus();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      if (index % columns > 0) inputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (index + columns < rows * columns) inputRefs.current[index + columns]?.focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (index - columns >= 0) inputRefs.current[index - columns]?.focus();
+    }
+  };
+
+  // Generate dynamic label
   const getLabel = (index) => {
-    if (index >= 110 && index < 120) {
-      return `A${(index % 10) + 1}`;
-    } else if (index >= 100 && index < 110) {
-      return `B${(index % 10) + 1}`;
+    if (index >= rows * columns - columns && index < rows * columns) {
+      return `A${(index % columns) + 1}`;
+    } else if (index >= rows * columns - 2 * columns && index < rows * columns - columns) {
+      return `B${(index % columns) + 1}`;
     }
     return index + 1;
   };
 
-  // Calculate totals for each row
+  // Calculate row total
   const calculateRowTotal = (startIndex) => {
     return inputs
-      .slice(startIndex, startIndex + 10)
+      .slice(startIndex, startIndex + columns)
       .reduce((acc, curr) => acc + (parseFloat(curr) || 0), 0);
   };
 
-  // Calculate the final total
+  // Calculate final total
   const calculateFinalTotal = () => {
     return inputs.reduce((acc, curr) => acc + (parseFloat(curr) || 0), 0);
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    const data = inputs.map((value, index) => ({
+      Label: getLabel(index),
+      Value: value || "0",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Jantri Data");
+    XLSX.writeFile(workbook, "JantriData.xlsx");
   };
 
   return (
@@ -62,15 +93,21 @@ const JantriMain = () => {
         <div className="table-container flex-grow-1 overflow-hidden">
           <table className="table w-100 h-100" style={{ tableLayout: "fixed" }}>
             <tbody>
-              {[...Array(12)].map((_, rowIndex) => (
+              {[...Array(rows)].map((_, rowIndex) => (
                 <tr key={rowIndex}>
-                  {[...Array(10)].map((_, colIndex) => {
-                    const index = rowIndex * 10 + colIndex;
+                  {[...Array(columns)].map((_, colIndex) => {
+                    const index = rowIndex * columns + colIndex;
                     return (
                       <td key={colIndex} className="p-0 text-center">
                         <div style={{ padding: "2px 0" }}>
                           <label
-                            style={{ fontSize: "15px", fontWeight: "500", display: "block", marginBottom: "4px", color: "red" }}
+                            style={{
+                              fontSize: "15px",
+                              fontWeight: "500",
+                              display: "block",
+                              marginBottom: "4px",
+                              color: "red",
+                            }}
                           >
                             {getLabel(index)}
                           </label>
@@ -81,14 +118,25 @@ const JantriMain = () => {
                             onChange={(e) => handleInputChange(index, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, index)}
                             ref={(el) => (inputRefs.current[index] = el)}
-                            style={{ height: "25px", fontSize: "1rem", padding: 0, margin: 0, backgroundColor: "white", color: "black", fontWeight: "700" }}
+                            style={{
+                              height: "25px",
+                              fontSize: "1rem",
+                              padding: 0,
+                              margin: 0,
+                              backgroundColor: "white",
+                              color: "black",
+                              fontWeight: "700",
+                            }}
                           />
                         </div>
                       </td>
                     );
                   })}
-                  <td className="bg-light text-center " style={{ fontSize: "1rem", fontWeight: "bold", color: "blue" }}>
-                    {calculateRowTotal(rowIndex * 10)}
+                  <td
+                    className="bg-light text-center"
+                    style={{ fontSize: "1rem", fontWeight: "bold", color: "blue" }}
+                  >
+                    {calculateRowTotal(rowIndex * columns)}
                   </td>
                 </tr>
               ))}
@@ -120,8 +168,10 @@ const JantriMain = () => {
             <label>Number Input</label>
             <input type="text" className="form-control" placeholder="Enter number" />
           </div>
-          <div className="form-group">
-            <button className="btn btn-primary w-100">Submit</button>
+          <div className="form-group mb-3">
+            <button className="btn btn-primary w-100" onClick={exportToExcel}>
+              Export to Excel
+            </button>
           </div>
         </div>
       </div>

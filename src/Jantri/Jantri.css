@@ -64,3 +64,27 @@ label {
   height: calc(100vh - 60px); /* Adjust content height to fit the viewport */
   overflow-y: auto;
 }
+.small-input {
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.small-input:focus {
+  outline: none;
+  border-color: #007bff;
+  background-color: #eaf4ff;
+}
+
+.final-total {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.table-container {
+  overflow: auto;
+}
+
+.right-section {
+  background-color: #f8f9fa;
+}
