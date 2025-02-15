@@ -81,21 +81,56 @@ const JantriMain = () => {
     }
   };
 
+  // Handle Key Navigation
+  const handleKeyDown = (event, index) => {
+    const totalCells = rows * columns;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        if (index + columns < totalCells) {
+          inputRefs.current[index + columns]?.focus();
+        }
+        break;
+      case 'ArrowUp':
+        if (index - columns >= 0) {
+          inputRefs.current[index - columns]?.focus();
+        }
+        break;
+      case 'ArrowRight':
+        if ((index + 1) % columns !== 0) {
+          inputRefs.current[index + 1]?.focus();
+        }
+        break;
+      case 'ArrowLeft':
+        if (index % columns !== 0) {
+          inputRefs.current[index - 1]?.focus();
+        }
+        break;
+      case 'Enter':
+        if (index + 1 < totalCells) {
+          inputRefs.current[index + 1]?.focus();
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="container-fluid vh-100 d-flex">
       {/* Left Section */}
-      <div className="left-section w-75 border-end d-flex flex-column" style={{ backgroundColor: "#f8f9fa", boxShadow: "4px 0px 6px rgba(0, 0, 0, 0.1)" }}>
+      <div className="left-section  border-end d-flex flex-column" style={{ backgroundColor: "#f8f9fa",width:"75%", boxShadow: "4px 0px 6px rgba(0, 0, 0, 0.1)" }}>
         <div className="table-container flex-grow-1 overflow-hidden">
-          <table className="table w-100 h-100" style={{ tableLayout: "fixed", backgroundColor: "#ffffff", fontSize: "12px" }}>
+          <table className="table w-100 h-100" style={{ tableLayout: "fixed", backgroundColor: "#f0f8ff", fontSize: "12px" }}>
             <tbody>
               {[...Array(rows)].map((_, rowIndex) => (
-                <tr key={rowIndex} style={{ backgroundColor: "#f1f1f1" }}>
+                <tr key={rowIndex} style={{ backgroundColor: rowIndex % 2 === 0 ? "#e9f7fb" : "#f1f1f1" }}>
                   {[...Array(columns)].map((_, colIndex) => {
                     const index = rowIndex * columns + colIndex;
                     return (
-                      <td key={colIndex} className="p-0 text-center" style={{ backgroundColor: "#ffffff" }}>
-                        <div style={{ padding: "2px 0" }}>
-                          <label style={{ fontSize: "12px", fontWeight: "500", display: "block", marginBottom: "4px", color: "red" }}>
+                      <td key={colIndex} className="p-0 text-center" style={{ backgroundColor:"black",color:'red' }}>
+                        <div style={{ padding: "0px 0",backgroundColor:"black" }}>
+                          <label style={{ fontSize: "18px", fontWeight: "500", display: "block", marginBottom: "4px", color: "red" }}>
                             {getLabel(index)}
                           </label>
                           <input
@@ -103,14 +138,14 @@ const JantriMain = () => {
                             className="no-spinner small-input"
                             value={inputs[index]}
                             onChange={(e) => handleInputChange(index, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, index)} // Added keydown event
                             ref={(el) => (inputRefs.current[index] = el)}
                             style={{
                               height: "20px",
-                              fontSize: "12px",
-                              padding: 0,
-                              margin: 0,
-                              backgroundColor: "white",
-                              color: "black",
+                              fontSize: "18px",
+                              border:"1px solid Orange",
+                              backgroundColor: "black",
+                              color: "white",
                               fontWeight: "700",
                             }}
                           />
@@ -118,7 +153,7 @@ const JantriMain = () => {
                       </td>
                     );
                   })}
-                  <td className="bg-light text-center" style={{ fontSize: "12px", fontWeight: "bold", color: "blue" }}>
+                  <td className="bg-light text-center" style={{ fontSize: "20px", fontWeight: "bold", color: "blue",backgroundColor:"black" }}>
                     {calculateRowTotal(rowIndex * columns)}
                   </td>
                 </tr>
@@ -166,6 +201,12 @@ const JantriMain = () => {
             </select>
           </div>
 
+          {/* Date Section */}
+          <div className="form-group mb-3">
+            <label>Date</label>
+            <input type="date" className="form-control" />
+          </div>
+<div><a href="/Cutting">Cutting</a></div>
           {/* Table Section */}
           <div className="table-container mt-3">
             <table className="table table-bordered" style={{ fontSize: "12px" }}>

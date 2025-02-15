@@ -10,6 +10,12 @@ body {
   height: 100vh;
 }
 
+.right-section .btn {
+  margin-top: 20px; /* Ensures buttons have some space above */
+  width: 100%; /* Makes buttons stretch across the container */
+  text-align: center; /* Centers button text */
+}
+
 label {
   font-size: 15px;
   display: block;
@@ -18,7 +24,7 @@ label {
 }
 
 .small-input {
-  width: 100%;
+  width: 50%;
   text-align: center;
   font-size: 12px;
   
@@ -88,3 +94,6 @@ label {
 .right-section {
   background-color: #f8f9fa;
 }
+
+
+

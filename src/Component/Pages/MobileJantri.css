@@ -1,0 +1,8 @@
+body {
+    overflow-x: hidden; /* Prevent horizontal scrolling for the page */
+  }
+  
+  .container-fluid {
+    overflow-y: auto; /* Allow vertical scrolling */
+  }
+  
